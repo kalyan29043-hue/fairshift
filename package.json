@@ -1,0 +1,24 @@
+{
+  "name": "fairshift",
+  "version": "1.0.0",
+  "description": "FairShift - Equitable shift scheduling, safety tracking, and transparent labor metrics for construction and campus work-study.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "test": "node --test test/**/*.test.js",
+    "start": "node server.js"
+  },
+  "keywords": [
+    "scheduling",
+    "fairshift",
+    "work-study",
+    "construction",
+    "sdg8"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
+

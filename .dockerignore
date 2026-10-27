@@ -1,0 +1,11 @@
+# .dockerignore — keep Cloud Run image lean
+node_modules/
+.env
+.env.*
+chrome_profile/
+*.log
+npm-debug.log*
+.git/
+.gitignore
+test/
+*.md

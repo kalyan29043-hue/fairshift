@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FairShift — Equitable Shift Scheduling & Labor Wellbeing</title>
+  <meta name="description" content="Transparent, fatigue-aware shift scheduling, safety reporting, and equity metrics for construction crews and college work-study staff.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Top Navigation & Brand Header -->
+  <header class="app-header" role="banner">
+    <div class="header-inner container">
+      <div class="brand-group">
+        <div class="brand-logo" aria-hidden="true">⚡</div>
+        <div class="brand-text">
+          <h1 class="brand-title">FairShift</h1>
+          <p class="brand-subtitle">Labor Equity & Fatigue Intelligence</p>
+        </div>
+      </div>
+
+      <!-- Sector Switcher (Construction ⇋ College) -->
+      <div class="sector-switcher-box" role="region" aria-label="Sector Selector">
+        <label for="sectorSelect" class="sr-only">Select Industry Sector</label>
+        <span class="sector-label" aria-hidden="true">Active Sector:</span>
+        <div class="sector-toggle-group">
+          <button type="button" class="sector-btn active" data-sector="construction" id="btnSectorConstruction" aria-pressed="true">
+            <span class="sector-icon" aria-hidden="true">🏗️</span> Construction Site
+          </button>
+          <button type="button" class="sector-btn" data-sector="college" id="btnSectorCollege" aria-pressed="false">
+            <span class="sector-icon" aria-hidden="true">🎓</span> College Work-Study
+          </button>
+        </div>
+      </div>
+
+      <!-- Persona / Role Portal Navigation -->
+      <nav class="portal-nav" aria-label="Portal Mode">
+        <ul class="nav-tabs" role="tablist">
+          <li role="presentation">
+            <button role="tab" id="tabWorker" class="nav-tab active" aria-selected="true" aria-controls="viewWorker">
+              <span aria-hidden="true">👷</span> Worker Portal
+            </button>
+          </li>
+          <li role="presentation">
+            <button role="tab" id="tabEmployer" class="nav-tab" aria-selected="false" aria-controls="viewEmployer">
+              <span aria-hidden="true">🏢</span> Employer & Safety Admin
+            </button>
+          </li>
+          <li role="presentation">
+            <button role="tab" id="tabReports" class="nav-tab" aria-selected="false" aria-controls="viewReports">
+              <span aria-hidden="true">🛡️</span> Safety & Grievances
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Persistent Mandatory Demonstration Disclaimer Banner -->
+  <aside class="demo-disclaimer-banner" role="complementary" aria-label="Demonstration Notice">
+    <div class="container banner-content">
+      <span class="badge-notice" aria-hidden="true">SIMULATION NOTICE</span>
+      <p class="banner-text">
+        <strong>Demonstration environment only:</strong> Shift rest intervals (11h) and student hour caps (20h) are simulation demonstration assumptions, not statutory labor mandates or legal advice. Storage is strictly in-memory and resets when the server restarts. Reports are tracked transparently without guaranteed anonymity.
+      </p>
+    </div>
+  </aside>
+
+  <!-- Live Status & Toast Announcer -->
+  <div id="liveAnnouncer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+  <div id="toastContainer" class="toast-container" aria-live="assertive" aria-atomic="true"></div>
+
+  <!-- Main Content Areas -->
+  <main class="container main-content" id="mainContent" role="main">
+
+    <!-- ========================================== -->
+    <!-- VIEW 1: WORKER PORTAL                      -->
+    <!-- ========================================== -->
+    <section id="viewWorker" class="portal-view active" role="tabpanel" aria-labelledby="tabWorker">
+      
+      <!-- Worker Identity Selector & Summary Banner -->
+      <header class="section-header-card">
+        <div class="worker-selector-row">
+          <div class="form-field-compact">
+            <label for="workerSelect" class="field-label">Active Worker Demo Identity:</label>
+            <select id="workerSelect" class="form-select select-worker" aria-label="Switch active worker identity"></select>
+          </div>
+          <div class="worker-badges" id="workerBadges"></div>
+        </div>
+
+        <!-- Worker Transparent Hours & Pay Earnings Card -->
+        <div class="earnings-summary-grid">
+          <div class="metric-card">
+            <span class="metric-label">Assigned Shifts</span>
+            <span class="metric-val" id="workerShiftCount">0</span>
+            <span class="metric-sub" id="workerShiftSub">Active in current roster</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Scheduled Hours</span>
+            <span class="metric-val" id="workerTotalHours">0.0<small>h</small></span>
+            <span class="metric-sub" id="workerHoursSub">Demo cap guideline: 48h</span>
+          </div>
+          <div class="metric-card highlight">
+            <span class="metric-label">Estimated Gross Pay</span>
+            <span class="metric-val" id="workerGrossPay">₹0</span>
+            <span class="metric-sub">Calculated from hourly rates</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Sector Safety Rest</span>
+            <span class="metric-val" id="workerRestRule">11.0<small>h</small></span>
+            <span class="metric-sub">Demo assumption gap</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Available & Assigned Shifts Section -->
+      <div class="section-title-bar">
+        <div>
+          <h2 class="section-title">Open Shift Marketplace</h2>
+          <p class="section-desc">Browse upcoming shifts. FairShift highlights your certification match, rest intervals, and potential time conflicts.</p>
+        </div>
+        <div class="filter-actions">
+          <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshShifts">
+            <span aria-hidden="true">🔄</span> Refresh Shifts
+          </button>
+        </div>
+      </div>
+
+      <!-- Shift Cards Grid -->
+      <div id="shiftsContainer" class="shifts-grid" role="region" aria-label="Available Shifts List">
+        <div class="loading-state">
+          <div class="spinner" aria-hidden="true"></div>
+          <p>Loading active shifts for sector...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VIEW 2: EMPLOYER & SAFETY ADMIN PORTAL      -->
+    <!-- ========================================== -->
+    <section id="viewEmployer" class="portal-view" role="tabpanel" aria-labelledby="tabEmployer" hidden>
+      
+      <!-- Metrics & Equity Overview Header -->
+      <div class="section-title-bar">
+        <div>
+          <h2 class="section-title">Workforce Wellbeing & Equity Analytics</h2>
+          <p class="section-desc">Audit shift distribution equity, monitor fatigue risk indicators, and spot concurrent schedule conflicts.</p>
+        </div>
+        <div class="filter-actions">
+          <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshMetrics">
+            <span aria-hidden="true">🔄</span> Recalculate Metrics
+          </button>
+        </div>
+      </div>
+
+      <div class="admin-dashboard-grid">
+        <!-- Equity & Fairness Score Card -->
+        <article class="dashboard-card equity-card">
+          <h3 class="card-title"><span aria-hidden="true">⚖️</span> Shift Hours Distribution Equity</h3>
+          <div class="equity-score-box">
+            <div class="equity-number" id="equityScoreVal">--</div>
+            <div class="equity-label">Equity Score / 100</div>
+          </div>
+          <p class="equity-explanation" id="equityExplanation">Loading roster metrics...</p>
+          <div class="roster-stats-row">
+            <div class="stat-item">
+              <span class="stat-name">Mean Hours</span>
+              <strong id="statMeanHours">--</strong>
+            </div>
+            <div class="stat-item">
+              <span class="stat-name">Std Deviation</span>
+              <strong id="statStdDev">--</strong>
+            </div>
+            <div class="stat-item">
+              <span class="stat-name">Active Crew</span>
+              <strong id="statCrewCount">--</strong>
+            </div>
+          </div>
+        </article>
+
+        <!-- Fatigue & Conflict Alerts Card -->
+        <article class="dashboard-card alerts-card">
+          <h3 class="card-title"><span aria-hidden="true">⚠️</span> Fatigue & Overlap Alerts</h3>
+          <div id="fatigueAlertsContainer" class="alerts-list">
+            <p class="empty-hint">No active fatigue warnings for this roster.</p>
+          </div>
+        </article>
+      </div>
+
+      <!-- Shift Creation Form -->
+      <article class="dashboard-card create-shift-card">
+        <div class="card-header">
+          <h3 class="card-title"><span aria-hidden="true">➕</span> Create & Publish New Shift</h3>
+          <span class="badge-role" id="newShiftSectorBadge">Construction</span>
+        </div>
+        <form id="createShiftForm" class="shift-form" novalidate>
+          <div class="form-grid-3">
+            <div class="form-group span-2">
+              <label for="shiftTitle" class="form-label">Shift Title *</label>
+              <input type="text" id="shiftTitle" class="form-input" placeholder="e.g. Scaffolding Inspection & Staging" required minlength="3">
+              <span class="field-error" id="errShiftTitle"></span>
+            </div>
+            <div class="form-group">
+              <label for="shiftRole" class="form-label">Required Role *</label>
+              <select id="shiftRole" class="form-select" required></select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="shiftDesc" class="form-label">Task Description / Scope</label>
+            <input type="text" id="shiftDesc" class="form-input" placeholder="Brief duty details or station location">
+          </div>
+
+          <div class="form-grid-4">
+            <div class="form-group">
+              <label for="shiftStartTime" class="form-label">Start Time *</label>
+              <input type="datetime-local" id="shiftStartTime" class="form-input" required>
+              <span class="field-error" id="errShiftStart"></span>
+            </div>
+            <div class="form-group">
+              <label for="shiftEndTime" class="form-label">End Time *</label>
+              <input type="datetime-local" id="shiftEndTime" class="form-input" required>
+              <span class="field-error" id="errShiftEnd"></span>
+            </div>
+            <div class="form-group">
+              <label for="shiftHourlyRate" class="form-label">Hourly Rate (₹) *</label>
+              <input type="number" id="shiftHourlyRate" class="form-input" min="0" step="10" placeholder="e.g. 350" required>
+              <span class="field-error" id="errShiftRate"></span>
+            </div>
+            <div class="form-group">
+              <label for="shiftCapacity" class="form-label">Capacity (Workers) *</label>
+              <input type="number" id="shiftCapacity" class="form-input" min="1" max="10" value="1" required>
+              <span class="field-error" id="errShiftCapacity"></span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="shiftCerts" class="form-label">Required Certification (Optional)</label>
+            <input type="text" id="shiftCerts" class="form-input" placeholder="e.g. Scaffolding Safety, OSHA-10, FERPA Basics">
+            <span class="field-hint">Comma-separated certifications required to claim.</span>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" id="btnSubmitShift">
+              <span aria-hidden="true">🚀</span> Publish Shift
+            </button>
+            <button type="button" class="btn btn-secondary" id="btnResetShiftForm">Reset Form</button>
+          </div>
+        </form>
+      </article>
+
+      <!-- Worker Roster Allocation Table -->
+      <article class="dashboard-card">
+        <h3 class="card-title"><span aria-hidden="true">👥</span> Sector Roster Allocation Overview</h3>
+        <div class="table-responsive">
+          <table class="data-table" aria-label="Worker Roster Allocation">
+            <thead>
+              <tr>
+                <th scope="col">Worker Name</th>
+                <th scope="col">Qualified Roles</th>
+                <th scope="col">Certifications</th>
+                <th scope="col">Total Hours</th>
+                <th scope="col">Total Earnings</th>
+                <th scope="col">Status</th>
+              </tr>
+            </thead>
+            <tbody id="rosterTableBody">
+              <tr>
+                <td colspan="6" class="text-center">Loading roster details...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VIEW 3: SAFETY & GRIEVANCE REPORTING       -->
+    <!-- ========================================== -->
+    <section id="viewReports" class="portal-view" role="tabpanel" aria-labelledby="tabReports" hidden>
+      
+      <div class="section-title-bar">
+        <div>
+          <h2 class="section-title">Safety & Labor Grievance Tracker</h2>
+          <p class="section-desc">Submit safety hazards or scheduling grievances. Every report receives a unique trackable reference ID.</p>
+        </div>
+      </div>
+
+      <div class="reports-layout-grid">
+        <!-- Submit Report Card -->
+        <article class="dashboard-card submit-report-card">
+          <h3 class="card-title"><span aria-hidden="true">📝</span> Submit a Report or Grievance</h3>
+          <p class="card-subtitle">Reports are stored in the demonstration tracking registry with an auditable status lifecycle.</p>
+          
+          <form id="submitReportForm" class="report-form" novalidate>
+            <div class="form-group">
+              <label for="reportType" class="form-label">Issue Category *</label>
+              <select id="reportType" class="form-select" required>
+                <option value="safety_hazard">⚠️ Safety Hazard (Equipment, Site Condition, Fall Risk)</option>
+                <option value="fatigue_exhaustion">😴 Fatigue / Excessive Consecutive Hours</option>
+                <option value="wage_discrepancy">💵 Wage / Rate Discrepancy</option>
+                <option value="scheduling_bias">⚖️ Scheduling Inequity or Favoritism</option>
+                <option value="other">📌 Other Workplace Concern</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="reportDescription" class="form-label">Detailed Description *</label>
+              <textarea id="reportDescription" class="form-textarea" rows="4" placeholder="Describe the hazard location, shift context, or concern (minimum 10 characters)..." required minlength="10"></textarea>
+              <span class="field-error" id="errReportDesc"></span>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="reporterName" class="form-label">Reporter Name / Alias</label>
+                <input type="text" id="reporterName" class="form-input" placeholder="e.g. Sunil K. or Anonymous Worker">
+              </div>
+              <div class="form-group">
+                <label for="reportSector" class="form-label">Sector Context</label>
+                <select id="reportSector" class="form-select" disabled>
+                  <option value="construction">Construction Site</option>
+                  <option value="college">College Work-Study</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary" id="btnSubmitReport">
+                <span aria-hidden="true">🛡️</span> File Report
+              </button>
+            </div>
+          </form>
+
+          <!-- Generated ID Success Callout -->
+          <div id="reportSuccessBox" class="callout-success" hidden>
+            <div class="callout-icon" aria-hidden="true">✅</div>
+            <div class="callout-text">
+              <strong>Report Successfully Filed!</strong>
+              <p>Your trackable reference ID is: <code class="ref-code" id="newReportRefId">--</code></p>
+              <p class="small-text">Keep this ID to inspect status progression and supervisor notes.</p>
+            </div>
+          </div>
+        </article>
+
+        <!-- Status Lookup & Audit History Card -->
+        <article class="dashboard-card status-lookup-card">
+          <h3 class="card-title"><span aria-hidden="true">🔍</span> Track Report Status by ID</h3>
+          <p class="card-subtitle">Enter any reference ID (e.g. <code>FS-SAFE-0001</code>) to review investigative status and audit notes.</p>
+
+          <form id="trackReportForm" class="lookup-form" novalidate>
+            <div class="input-with-btn">
+              <input type="text" id="lookupRefId" class="form-input" placeholder="e.g. FS-SAFE-0001" required>
+              <button type="submit" class="btn btn-secondary" id="btnLookup">Track</button>
+            </div>
+          </form>
+
+          <!-- Tracked Report Result Display -->
+          <div id="reportResultBox" class="report-result-box" hidden>
+            <div class="report-result-header">
+              <div>
+                <span class="ref-title" id="resRefId">FS-SAFE-0001</span>
+                <span class="badge-status" id="resStatusBadge">UNDER_REVIEW</span>
+              </div>
+              <span class="res-date" id="resCreatedDate">--</span>
+            </div>
+
+            <p class="res-desc" id="resDescription">--</p>
+
+            <!-- Status Transition Action (Supervisor Demo) -->
+            <div class="transition-action-box" id="transitionBox">
+              <label for="nextStatusSelect" class="field-label-sm">Supervisor Action (Transition State):</label>
+              <div class="input-with-btn">
+                <select id="nextStatusSelect" class="form-select select-sm"></select>
+                <input type="text" id="statusNoteInput" class="form-input input-sm" placeholder="Audit note (optional)">
+                <button type="button" class="btn btn-primary btn-sm" id="btnApplyTransition">Update Status</button>
+              </div>
+            </div>
+
+            <h4 class="history-title">Audit History Timeline</h4>
+            <ol class="history-timeline" id="resHistoryTimeline"></ol>
+          </div>
+        </article>
+      </div>
+
+      <!-- Public Safe Reports Registry -->
+      <article class="dashboard-card mt-4">
+        <h3 class="card-title"><span aria-hidden="true">📋</span> Public Safety & Transparency Registry</h3>
+        <p class="card-subtitle">Public audit view. Reporter identifiers and private notes are redacted for privacy.</p>
+        <div class="table-responsive">
+          <table class="data-table" aria-label="Safety Reports Registry">
+            <thead>
+              <tr>
+                <th scope="col">Reference ID</th>
+                <th scope="col">Sector</th>
+                <th scope="col">Category</th>
+                <th scope="col">Status</th>
+                <th scope="col">Preview</th>
+                <th scope="col">Reported Date</th>
+                <th scope="col">Action</th>
+              </tr>
+            </thead>
+            <tbody id="publicReportsTable">
+              <tr>
+                <td colspan="7" class="text-center">Loading registry records...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+  </main>
+
+  <!-- App Footer -->
+  <footer class="app-footer" role="contentinfo">
+    <div class="container footer-inner">
+      <div class="footer-col">
+        <div class="brand-inline"><strong>FairShift</strong> ⚡ PromptWars MVP</div>
+        <p class="footer-note">Designed for SDG 8 (Decent Work & Economic Growth) across Construction sites and Campus Work-Study programs.</p>
+      </div>
+      <div class="footer-col text-right">
+        <p class="footer-badge">Built with Zero External Production Dependencies (Native Node.js)</p>
+        <p class="footer-sub">Google Cloud Run Compatible • In-Memory Demonstration Runtime</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
+

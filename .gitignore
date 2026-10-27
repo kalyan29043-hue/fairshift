@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+*.p12
+*.pfx
+id_rsa*
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+
+# Runtime and temporary data
+tmp/
+temp/
+dist/
+build/
+.cache/
+coverage/
+.nyc_output/
+chrome_profile/
+
+# OS metadata
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# IDE and Editor directories
+.vscode/
+.idea/
+*.swp
+*.swo
+
