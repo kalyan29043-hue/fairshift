@@ -310,13 +310,23 @@ export function createServer(storeInstance) {
   });
 }
 
-// Start server when executed directly as script
+// ── Vercel / serverless default export ───────────────────────────────────────
+// Vercel's @vercel/node runtime requires the entry module to have a default
+// export that is either a function(req, res) or an http.Server instance.
+// package.json "main" points at this file, so Vercel validates it on deploy.
+// We create one server per module load (one store per cold start) and expose
+// the internal request listener as the default export.
+// Named export `createServer` is unchanged — existing tests are unaffected.
+const _vercelServer = createServer();
+export default _vercelServer.listeners("request")[0];
+
+// ── Local development: start listening when run directly ─────────────────────
 const isMain = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
 if (isMain) {
   const PORT = process.env.PORT || 8080;
   const HOST = "0.0.0.0";
-  const server = createServer();
-  server.listen(PORT, HOST, () => {
+  // Reuse the already-created server so we don't make a second store
+  _vercelServer.listen(PORT, HOST, () => {
     // eslint-disable-next-line no-console
     console.log(`FairShift server listening on http://${HOST}:${PORT}`);
     // eslint-disable-next-line no-console
