@@ -1099,6 +1099,100 @@ body {
   to { transform: rotate(360deg); }
 }
 
+/* ─── Missing utility & layout classes ──────────────────────────────────── */
+
+/* Text utilities */
+.text-center { text-align: center; }
+.text-right  { text-align: right; }
+
+/* Spacing */
+.mt-4 { margin-top: 1.5rem; }
+
+/* Grid span — used in .form-grid-3 for shift title field */
+.form-grid-3 .span-2 {
+  grid-column: span 2;
+}
+
+@media (max-width: 639px) {
+  .form-grid-3 .span-2 {
+    grid-column: span 1;
+  }
+}
+
+/* Section title bar filter-actions alignment */
+.filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* Brand text block in header */
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+/* Sector icon inside toggle buttons */
+.sector-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* Specific card modifier classes (no visible change needed — they're structural hooks) */
+.equity-card,
+.alerts-card,
+.create-shift-card,
+.submit-report-card,
+.status-lookup-card {
+  /* Inherits from .dashboard-card — kept for specificity & JS hooks */
+}
+
+/* Report success callout sub-elements */
+.callout-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.callout-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.callout-text p {
+  margin: 0;
+  color: #d1fae5;
+}
+
+.small-text {
+  font-size: 0.75rem;
+  color: #a7f3d0;
+}
+
+/* Report result header date */
+.res-date {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Footer columns */
+.footer-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.footer-note {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
 /* Footer */
 .app-footer {
   background: var(--bg-card);

@@ -349,6 +349,7 @@
 
           <form id="trackReportForm" class="lookup-form" novalidate>
             <div class="input-with-btn">
+              <label for="lookupRefId" class="sr-only">Report Reference ID</label>
               <input type="text" id="lookupRefId" class="form-input" placeholder="e.g. FS-SAFE-0001" required>
               <button type="submit" class="btn btn-secondary" id="btnLookup">Track</button>
             </div>
@@ -371,6 +372,7 @@
               <label for="nextStatusSelect" class="field-label-sm">Supervisor Action (Transition State):</label>
               <div class="input-with-btn">
                 <select id="nextStatusSelect" class="form-select select-sm"></select>
+                <label for="statusNoteInput" class="sr-only">Audit note (optional)</label>
                 <input type="text" id="statusNoteInput" class="form-input input-sm" placeholder="Audit note (optional)">
                 <button type="button" class="btn btn-primary btn-sm" id="btnApplyTransition">Update Status</button>
               </div>

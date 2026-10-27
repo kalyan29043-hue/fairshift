@@ -429,6 +429,11 @@
 
     if (hasError) return;
 
+    const submitBtn = document.getElementById("btnSubmitShift");
+    const originalSubmitHtml = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;vertical-align:middle;" aria-hidden="true"></span> Publishing...`;
+
     try {
       const payload = {
         sector: state.activeSector,
@@ -455,6 +460,9 @@
       await Promise.all([loadShifts(), loadMetrics()]);
     } catch (err) {
       showToast(err.message, "error");
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalSubmitHtml;
     }
   });
 
@@ -577,6 +585,14 @@
       return;
     }
 
+    // Hide any previous success box before submitting
+    el.reportSuccessBox.hidden = true;
+
+    const btn = document.getElementById("btnSubmitReport");
+    const originalBtnHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;vertical-align:middle;" aria-hidden="true"></span> Filing...`;
+
     try {
       const res = await apiFetch("/api/reports", {
         method: "POST",
@@ -601,6 +617,9 @@
       await handleTrackReport(report.referenceId);
     } catch (err) {
       showToast(err.message, "error");
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalBtnHtml;
     }
   });
 
@@ -738,6 +757,8 @@
       btn.addEventListener("click", () => {
         const refId = btn.getAttribute("data-ref-id");
         el.lookupRefId.value = refId;
+        // Navigate to Safety & Grievances tab so the result box is visible
+        switchTab("viewReports");
         handleTrackReport(refId);
       });
     });
