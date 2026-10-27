@@ -4,5 +4,3 @@
     { "source": "/:path*",     "destination": "/public/index.html" }
   ]
 }
-
-}
