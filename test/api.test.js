@@ -484,5 +484,65 @@ describe("FairShift REST API Integration Tests", () => {
       assert.ok(res.status === 403 || res.status === 404);
     });
   });
+
+  describe("Input Validation — Sector Allowlist", () => {
+    it("rejects invalid sector on GET /api/workers with 400", async () => {
+      const res = await request("/api/workers?sector=INJECTED");
+      assert.equal(res.status, 400);
+      assert.match(res.data.error, /Invalid sector/);
+    });
+
+    it("rejects invalid sector on GET /api/shifts with 400", async () => {
+      const res = await request("/api/shifts?sector=<script>alert(1)</script>");
+      assert.equal(res.status, 400);
+      assert.match(res.data.error, /Invalid sector/);
+    });
+
+    it("rejects invalid sector on GET /api/reports with 400", async () => {
+      const res = await request("/api/reports?sector=unknown_sector");
+      assert.equal(res.status, 400);
+      assert.match(res.data.error, /Invalid sector/);
+    });
+
+    it("rejects invalid sector on GET /api/config with 400", async () => {
+      const res = await request("/api/config?sector=hacker");
+      assert.equal(res.status, 400);
+      assert.match(res.data.error, /Invalid sector/);
+    });
+
+    it("rejects invalid sector on GET /api/admin/metrics with 400", async () => {
+      const res = await request("/api/admin/metrics?sector=DROP TABLE");
+      assert.equal(res.status, 400);
+      assert.match(res.data.error, /Invalid sector/);
+    });
+
+    it("accepts valid sector 'construction' on all GET endpoints", async () => {
+      const endpoints = [
+        "/api/workers?sector=construction",
+        "/api/shifts?sector=construction",
+        "/api/reports?sector=construction",
+        "/api/config?sector=construction",
+        "/api/admin/metrics?sector=construction"
+      ];
+      for (const ep of endpoints) {
+        const res = await request(ep);
+        assert.equal(res.status, 200, `Expected 200 for ${ep}, got ${res.status}`);
+      }
+    });
+
+    it("accepts valid sector 'college' on all GET endpoints", async () => {
+      const endpoints = [
+        "/api/workers?sector=college",
+        "/api/shifts?sector=college",
+        "/api/reports?sector=college",
+        "/api/config?sector=college",
+        "/api/admin/metrics?sector=college"
+      ];
+      for (const ep of endpoints) {
+        const res = await request(ep);
+        assert.equal(res.status, 200, `Expected 200 for ${ep}, got ${res.status}`);
+      }
+    });
+  });
 });
 

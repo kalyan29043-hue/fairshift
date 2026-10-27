@@ -19,6 +19,9 @@ import { ValueError, DEMO_DISCLAIMER } from "./lib/fairshift.js";
 
 const MAX_BODY_BYTES = 64 * 1024; // 64 KB limit
 
+/** Allowlist of valid sector identifiers. */
+const VALID_SECTORS = new Set(["construction", "college"]);
+
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
@@ -87,6 +90,23 @@ function sendError(res, statusCode, message, extra = {}) {
     error: message,
     ...extra
   });
+}
+
+/**
+ * Validate an optional sector query parameter against the allowlist.
+ * Returns the validated sector string, or null if the parameter was absent.
+ * Throws a 400 error via sendError if the value is present but not allowed.
+ * @param {string|null} sector - The raw query parameter value.
+ * @param {object} res - The response object (used to send error immediately).
+ * @returns {string|null|false} validated sector, null if absent, or false if invalid (error already sent).
+ */
+function validateSector(sector, res) {
+  if (!sector) return null;
+  if (!VALID_SECTORS.has(sector)) {
+    sendError(res, 400, `Invalid sector: must be one of ${[...VALID_SECTORS].join(", ")}`);
+    return false;
+  }
+  return sector;
 }
 
 function parseJsonBody(req) {
@@ -165,7 +185,9 @@ export function createServer(storeInstance) {
         if (method !== "GET") {
           return sendError(res, 405, "Method Not Allowed");
         }
-        const sector = parsedUrl.searchParams.get("sector") || "construction";
+        const rawSector = parsedUrl.searchParams.get("sector") || "construction";
+        const sector = validateSector(rawSector, res);
+        if (sector === false) return;
         return sendJson(res, 200, {
           activeSector: sector,
           config: store.getSectorConfig(sector),
@@ -178,7 +200,9 @@ export function createServer(storeInstance) {
         if (method !== "GET") {
           return sendError(res, 405, "Method Not Allowed");
         }
-        const sector = parsedUrl.searchParams.get("sector");
+        const rawSector = parsedUrl.searchParams.get("sector");
+        const sector = validateSector(rawSector, res);
+        if (sector === false) return;
         const workers = store.getWorkers(sector);
         return sendJson(res, 200, {
           workers,
@@ -189,7 +213,9 @@ export function createServer(storeInstance) {
       // 3. GET & POST /api/shifts
       if (pathname === "/api/shifts") {
         if (method === "GET") {
-          const sector = parsedUrl.searchParams.get("sector");
+          const rawSector = parsedUrl.searchParams.get("sector");
+          const sector = validateSector(rawSector, res);
+          if (sector === false) return;
           const workerId = parsedUrl.searchParams.get("workerId");
           const shifts = store.getShifts(sector, workerId);
           return sendJson(res, 200, {
@@ -233,7 +259,9 @@ export function createServer(storeInstance) {
       // 5. GET & POST /api/reports
       if (pathname === "/api/reports") {
         if (method === "GET") {
-          const sector = parsedUrl.searchParams.get("sector");
+          const rawSector = parsedUrl.searchParams.get("sector");
+          const sector = validateSector(rawSector, res);
+          if (sector === false) return;
           const refId = parsedUrl.searchParams.get("refId");
           const result = store.getReports(sector, refId);
           if (refId && !result) {
@@ -283,7 +311,9 @@ export function createServer(storeInstance) {
         if (method !== "GET") {
           return sendError(res, 405, "Method Not Allowed");
         }
-        const sector = parsedUrl.searchParams.get("sector") || "construction";
+        const rawSector = parsedUrl.searchParams.get("sector") || "construction";
+        const sector = validateSector(rawSector, res);
+        if (sector === false) return;
         const metrics = store.getAdminMetrics(sector);
         return sendJson(res, 200, {
           metrics,
