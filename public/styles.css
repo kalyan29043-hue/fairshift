@@ -53,6 +53,16 @@
   padding: 0;
 }
 
+/* Normalize the HTML [hidden] attribute.
+   Without this, author-stylesheet display rules (display:flex, display:grid, etc.)
+   override the UA-stylesheet [hidden]{display:none} rule because author styles
+   always beat UA styles in the cascade, regardless of specificity or source order.
+   Using !important gives [hidden] the highest precedence so any element with the
+   hidden attribute is invisible regardless of its class's display value. */
+[hidden] {
+  display: none !important;
+}
+
 body {
   font-family: var(--font-sans);
   background-color: var(--bg-app);

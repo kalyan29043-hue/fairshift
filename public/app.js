@@ -606,6 +606,9 @@
       });
 
       const report = res.report;
+      if (!report || !report.referenceId) {
+        throw new Error(`Server response missing report data. Got: ${JSON.stringify(res)}`);
+      }
       el.newReportRefId.textContent = report.referenceId;
       el.reportSuccessBox.hidden = false;
       document.getElementById("reportDescription").value = "";
