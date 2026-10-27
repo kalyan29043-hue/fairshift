@@ -110,15 +110,18 @@
       .replace(/'/g, "&#039;");
   }
 
+  // Cached DateTimeFormat to avoid expensive recreation on every render call
+  const dateFormatter = new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+
   function formatDate(isoStr) {
     if (!isoStr) return "--";
     const d = new Date(isoStr);
-    return d.toLocaleString(undefined, {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit"
-    });
+    return isNaN(d.getTime()) ? "--" : dateFormatter.format(d);
   }
 
   // API Call Wrapper
@@ -152,12 +155,12 @@
   // Initial Data Fetch
   async function loadSectorData() {
     try {
-      // 1. Fetch Config
-      const configRes = await apiFetch(`/api/config?sector=${state.activeSector}`);
+      // 1. Fetch Config and Workers concurrently in parallel
+      const [configRes, workersRes] = await Promise.all([
+        apiFetch(`/api/config?sector=${state.activeSector}`),
+        apiFetch(`/api/workers?sector=${state.activeSector}`)
+      ]);
       state.config = configRes.config;
-
-      // 2. Fetch Workers for Sector
-      const workersRes = await apiFetch(`/api/workers?sector=${state.activeSector}`);
       state.workers = workersRes.workers || [];
 
       // Set active worker if not set or not in current sector
@@ -171,10 +174,10 @@
       renderWorkerSelector();
       renderWorkerSummary();
 
-      // 3. Load Shifts, Metrics, and Reports
+      // 2. Load Shifts, Metrics, and Reports in parallel (skip redundant worker fetch in loadMetrics)
       await Promise.all([
         loadShifts(),
-        loadMetrics(),
+        loadMetrics(false, false),
         loadPublicReports()
       ]);
 
@@ -472,7 +475,7 @@
   });
 
   // Admin Metrics & Roster
-  async function loadMetrics(isManual = false) {
+  async function loadMetrics(isManual = false, fetchWorkers = true) {
     const originalContent = el.btnRefreshMetrics ? el.btnRefreshMetrics.innerHTML : "";
     if (isManual && el.btnRefreshMetrics) {
       el.btnRefreshMetrics.disabled = true;
@@ -480,10 +483,11 @@
     }
 
     try {
-      const [metricsData, workersData] = await Promise.all([
-        apiFetch(`/api/admin/metrics?sector=${state.activeSector}`),
-        apiFetch(`/api/workers?sector=${state.activeSector}`)
-      ]);
+      const promises = [apiFetch(`/api/admin/metrics?sector=${state.activeSector}`)];
+      if (fetchWorkers) {
+        promises.push(apiFetch(`/api/workers?sector=${state.activeSector}`));
+      }
+      const [metricsData, workersData] = await Promise.all(promises);
       state.metrics = metricsData.metrics;
       if (workersData && Array.isArray(workersData.workers)) {
         state.workers = workersData.workers;
